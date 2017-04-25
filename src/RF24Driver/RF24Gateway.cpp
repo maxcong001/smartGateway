@@ -2,7 +2,7 @@
 
 
 #include "RF24Gateway.h"
-#include "RF24Mesh/RF24Mesh_config.h"
+#include "RF24Mesh_config.h"
 
 /***************************************************************************************/
 

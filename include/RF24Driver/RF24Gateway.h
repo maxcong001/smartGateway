@@ -24,9 +24,9 @@
   #include <sys/ioctl.h>
   #include <netdb.h>
   
-  #include <RF24/RF24.h>
-  #include <RF24Network/RF24Network.h>
-  #include <RF24Mesh/RF24Mesh.h>
+  #include <RF24.h>
+  #include <RF24Network.h>
+  #include <RF24Mesh.h>
   
 #ifndef IFF_MULTI_QUEUE
 	#define IFF_MULTI_QUEUE 0x0100
