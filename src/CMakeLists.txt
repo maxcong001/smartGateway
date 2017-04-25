@@ -1,3 +1,4 @@
+
 # Generate shared library by default.
 SET(BUILD_SHARED_LIBS ON)
 
