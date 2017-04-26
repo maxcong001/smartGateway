@@ -361,7 +361,6 @@ REMOTE_EXAMPLES_DIR=${REMOTE_EXAMPLES_DIR:-${REMOTE_PREFIX}/bin}
 LDCONFIG=${LDCONFIG-ldconfig}
 REMOTE_LDCONFIG=${REMOTE_LDCONFIG-/sbin/ldconfig}
 LIB=${LIB:-rf24}
-LIB_VERSION=${LIB_VERSION:-$(awk -F "=" '/version/ {print $2}' library.properties)}
 LIB_DEPRECATE_NAME=${LIB_DEPRECATE_NAME:-"rf24-bcm"}
 LIB_DEPRECATE_VERSION=${LIB_DEPRECATE_VERSION:-""}
 CC=${CC:-gcc}
@@ -444,11 +443,11 @@ if [ "${LIB_DEPRECATE_NAME}" ]; then
         LIBDEPRECATE="${LIBDEPRECATE}.${LIB_DEPRECATE_VERSION}"
     fi
 fi
-DRIVER_DIR=${DRIVER_DIR:-${ARCH_DIR}/${DRIVER}}
+#DRIVER_DIR=${DRIVER_DIR:-${ARCH_DIR}/${DRIVER}}
 CFLAGS="$CPUFLAGS -Ofast -Wall -pthread $CFLAGS"
 
 echo "[SECTION] Preparing configuration."
-cp ${DRIVER_DIR}/includes.h ${ARCH_DIR}/includes.h
+#cp ${DRIVER_DIR}/includes.h ${ARCH_DIR}/includes.h
 
 echo "[SECTION] Saving configuration."
 echo -n "" > Makefile.inc

@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/shm.h>
@@ -119,6 +119,13 @@ void send_message(int nodeID, int pin, int protocol, int get_set, int data, int 
     // need log here
     ret = setsockopt(sock_cli, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout));
     // need log here
+    if (!ret)
+    {
+        printf("setsockopt return fail!\n");
+        return;
+    }
+    
+
 
     struct sockaddr_in servaddr;
     memset(&servaddr, 0, sizeof(servaddr));
@@ -203,7 +210,7 @@ void test_cb(struct evhttp_request *request, void *arg)
 int main()
 {
     short http_port = 8081;
-    char *http_addr = "192.168.31.130";
+    std::string http_addr("192.168.31.130");
 
     struct event_base *base = event_base_new();
     struct evhttp *http_server = evhttp_new(base);
@@ -212,7 +219,7 @@ int main()
         return -1;
     }
 
-    int ret = evhttp_bind_socket(http_server, http_addr, http_port);
+    int ret = evhttp_bind_socket(http_server, http_addr.c_str(), http_port);
     if (ret != 0)
     {
         return -1;

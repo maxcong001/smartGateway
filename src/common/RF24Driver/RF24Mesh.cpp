@@ -109,7 +109,7 @@ bool RF24Mesh::write(const void* data, uint8_t msg_type, size_t size, uint8_t no
   if(nodeID){
     
     while( (toNode=getAddress(nodeID)) < 0 ){
-        if(millis() > lookupTimeout || toNode == -2){
+        if(millis() > (uint32_t)lookupTimeout || toNode == -2){
           return 0;
         }
         retryDelay+=50;
