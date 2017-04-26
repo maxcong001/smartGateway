@@ -22,6 +22,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/common/RF24Driver)
 # Include sub directory adapters and utils.
 ADD_SUBDIRECTORY(server/http_server)
 ADD_SUBDIRECTORY(server/RF24_server)
+ADD_SUBDIRECTORY(node)
 
 # Collect all source files.
 file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.c)
