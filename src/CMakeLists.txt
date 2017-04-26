@@ -14,15 +14,25 @@ MESSAGE(STATUS "PROJECT_SOURCE_DIR:" ${PROJECT_SOURCE_DIR})
 
 # Where header files can be found.
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/RF24Driver)
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/utility)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/common)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/common/utility)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/common/app_common)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/common/RF24Driver)
+
 # Include sub directory adapters and utils.
-#ADD_SUBDIRECTORY(utils)
+ADD_SUBDIRECTORY(server/http_server)
+ADD_SUBDIRECTORY(server/RF24_server)
 
 # Collect all source files.
 file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp *.c)
 #AUX_SOURCE_DIRECTORY(. SRC_LIST)
 #AUX_SOURCE_DIRECTORY(./utils SRC_LIST_UTILS)
+
+SET (REMOVE_LIST_FOR_SO
+    server/http_server/http_server.cpp
+	server/RF24_server/RF24_server.cpp
+)
+list(REMOVE_ITEM SOURCES ${REMOVE_LIST_FOR_SO})
 
 # Not compile test files into library
 IF(NOT ENABLE_TEST)
