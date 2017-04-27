@@ -122,7 +122,7 @@ void send_message(int nodeID, int pin, int protocol, int get_set, int data, int 
     if (!ret)
     {
         printf("setsockopt return fail!\n");
-        return;
+        //return;
     }
     
 
@@ -210,7 +210,8 @@ void test_cb(struct evhttp_request *request, void *arg)
 int main()
 {
     short http_port = 8081;
-    std::string http_addr("192.168.31.130");
+    std::string http_addr("135.252.143.76");
+    
 
     struct event_base *base = event_base_new();
     struct evhttp *http_server = evhttp_new(base);
