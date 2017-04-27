@@ -2,7 +2,9 @@
 ```cmake success```
 
 
-
+depends on:
+1. libevent
+2. log4cplus
 
 
 TODO list
