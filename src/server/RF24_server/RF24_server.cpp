@@ -1,25 +1,3 @@
-
-/*
-* RF24Mesh Master Node Monitoring Tool
-* This is a generic tool for master nodes running RF24Mesh that will display address
-* assignments, and information regarding incoming data, regardless of the specific
-* configuration details.
-*
-* Requirements: NCurses 
-* Install NCurses: apt-get install libncurses5-dev
-* Setup:
-* 1: make
-* 2: sudo ./RF24Mesh_Ncurses_Master
-* 
-* NOTE: DEBUG MUST BE DISABLED IN RF24Mesh_config.h
-*
-* Once configured and running, the interface will display the header information, data rate, 
-* and address assignments for all connected nodes.*
-* The master node will also continuously ping each of the child nodes, one per second, while indicating
-* the results.
-*
-*/
-
 #include <ncurses.h>
 #include "RF24Mesh.h"
 #include <RF24.h>
@@ -71,24 +49,8 @@ uint16_t failID = 0;
 int node_sockt_fd[256];
 
 #define PORT 25341
-#define BACKLOG 5
-#define MEM_SIZE 1024
 
-struct event_base *base;
-struct sock_ev
-{
-    struct event *read_ev;
-    struct event *write_ev;
-    char *buffer;
-};
-void release_sock_event(struct sock_ev *ev)
-{
-    event_del(ev->read_ev);
-    free(ev->read_ev);
-    free(ev->write_ev);
-    free(ev->buffer);
-    free(ev);
-}
+
 //void push_frame_queue(uint8_t nodeID, uint16_t type, char *message, uint16_t len)
 void push_frame_queue(char nodeID, char type, char *message)
 {
