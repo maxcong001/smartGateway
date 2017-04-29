@@ -13,7 +13,7 @@ TODO list
      add lock for frame_queue
      
 ###pin assignment
-
+```
 PIN 	NRF24L01 	 	RPI 	
 1 	GND 	GND 
 2 	VCC 	3.3V 	
@@ -23,3 +23,4 @@ PIN 	NRF24L01 	 	RPI
 6 	MOSI rpi-mosi 	
 7 	MISO rpi-miso 	
 8 	IRQ 	
+```
