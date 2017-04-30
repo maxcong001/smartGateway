@@ -60,14 +60,14 @@ int node_sockt_fd[256];
 
 
 //void push_frame_queue(uint8_t nodeID, uint16_t type, char *message, uint16_t len)
-void push_frame_queue(char nodeID, char type, char *message)
+void push_frame_queue(uint16_t nodeID, char type, char *message)
 {
     int16_t address_id;
     address_id = mesh.getAddress(nodeID);
     RF24NetworkHeader rf_header = RF24NetworkHeader(address_id, type);
     RF24NetworkFrame frame;
-    rf24_msg *payload_p = (rf24_msg *)(message);
-    frame.message_size = sizeof(*payload_p);
+
+    frame.message_size = sizeof(rf24_msg);
     if (frame.message_size > 22 )
     {
         LOG4CPLUS_WARN(logger, " message size is larger than 22!");
@@ -100,10 +100,18 @@ protected:
 		buff[length] = '\0';
         LOG4CPLUS_DEBUG(logger, "got message " << buff << ". Session id is "<< session->id());
 
-        //rf24_msg *payload_p = 
+        socket_message *payload_p = (rf24_msg *)buff;
+        if ((payload_p->magic_num) != MAGIC_NUM)
+        {
+            LOG4CPLUS_WARN(logger, "magic num miss match! Got invalid message!");
+            string ret_msg("magic num miss match! You sent invalid message!");
+            session->send(ret_msg.c_str(), ret_msg.size());
+            return;
+        }
+        push_frame_queue(payload_p->nodeID, payload_p->type, &(payload_p->msg))
 
-        // to do. Add logic here to send response message
-        // session->send(const char *data, uint32_t size);;
+        string ret_msg("push message to frame queue successfully");
+        session->send(ret_msg.c_str(), ret_msg.size());
 
 		delete [] buff;
 		session->close();

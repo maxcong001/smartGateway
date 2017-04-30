@@ -2,24 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-const char *socket_message::toString(void) const
-{
-    static char buffer[200];
-    sprintf(buffer, "id: %d, type: %d, len: %d", nodeID, type, len);
-    return buffer;
-}
-char get_protocol_len(char protocol)
-{
-    switch (protocol)
-    {
-    case rf_one_wire_onoff:
-        return sizeof(one_wire_onoff_s);
-        break;
-    default:
-        return 0;
-        break;
-    }
-}
+
 //void form_rf_payload(char *buf, char protocol, char *message)
 void form_rf_payload(char *buf, rf24_protocol protocol, protocol_detail protocol_detail)
 {
