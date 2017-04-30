@@ -1,6 +1,7 @@
 #include "rf_util.hpp"
 #include <stdio.h>
 #include <string.h>
+
 const char *socket_message::toString(void) const
 {
     static char buffer[200];
@@ -19,26 +20,29 @@ char get_protocol_len(char protocol)
         break;
     }
 }
-void form_rf_payload(char *buf, char protocol, char *message)
+//void form_rf_payload(char *buf, char protocol, char *message)
+void form_rf_payload(char *buf, rf24_protocol protocol, protocol_detail protocol_detail)
 {
-    rf_payload tmp_payload;
-    tmp_payload.protocol = protocol;
-    tmp_payload.len = sizeof(rf_payload) + get_protocol_len(protocol) - 1;
+    if (!buf)
+    {
+        return;
+    }
+    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol)), protocol, sizeof(protocol));
+    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol_detail)), protocol_detail, sizeof(protocol_detail));
+}
+void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type);
+//void form_socket_message_from_rf_payload(char *buf, char *payload, char nodeID, char type)
+{
+    socket_message* tmp_socket_message = reinterpret_cast<socket_message *>(buf);
+    tmp_socket_message->nodeID = nodeID;
+    tmp_socket_message->type = type;
 
-    memcpy(buf, &tmp_payload, sizeof(tmp_payload));
-    memcpy(&(((reinterpret_cast<rf_payload *>(buf))->data)), message, get_protocol_len(protocol));
+    memcpy(&(tmp_socket_message->msg), rf_payload, sizeof(rf24_msg));
 }
-void form_socket_message_from_rf_payload(char *buf, char *payload, char nodeID, char type)
-{
-    socket_message tmp_socket_message;
-    tmp_socket_message.nodeID = nodeID;
-    tmp_socket_message.type = type;
-    memcpy(buf, &tmp_socket_message, sizeof(socket_message));
-    memcpy(&(((reinterpret_cast<socket_message *>(buf))->message)), payload, ((rf_payload *)payload)->len);
-}
-void form_socket_message(char *buf, char nodeID, char type, char protocol, char *message)
+void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol protocol, protocol_detail protocol_detail)
+//void form_socket_message(char *buf, char nodeID, char type, char protocol, char *message)
 {
     char tmp_buf[32];
-    form_rf_payload(tmp_buf, protocol, message);
+    form_rf_payload(tmp_buf, protocol, protocol_detail);
     form_socket_message_from_rf_payload(buf, tmp_buf, nodeID, type);
 }

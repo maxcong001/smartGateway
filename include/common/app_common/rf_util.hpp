@@ -1,4 +1,5 @@
 #include "time.h"
+#include <stdint.h>
 //time_t time(time_t * timer)
 struct i2c_detail
 {
@@ -92,37 +93,13 @@ struct rf24_db_msg
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-struct rf_payload
-{
-    char protocol;
-    char len;
-    char data;
-};
-enum rf_protocol
-{
-    rf_one_wire_onoff,
-    rf_onoff,
-    rf_one_wire_analog,
-    rf_one_wire,
-    rf_i2c,
-    rf_spi,
-    rf_serial
-};
-struct one_wire_onoff_s
-{
-    char pin;
-    char data;
-    char reserve;
-};
 struct socket_message
 {
-    char nodeID;
     char type;
-    char len;
-    char message;
-    const char *toString(void) const;
+    uint16_t nodeID;
+    rf24_msg msg;
 };
-void form_rf_payload(char *buf, char protocol, char *message);
-void form_socket_message_from_rf_payload(char *buf, char *rf_payload, char nodeID, char type);
-void form_socket_message(char *buf, char nodeID, char type, char protocol, char *message);
+
+void form_rf_payload(char *buf, rf24_protocol _protocol, protocol_detail _protocol_detail);
+void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type);
+void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol _protocol, protocol_detail _protocol_detail);

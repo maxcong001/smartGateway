@@ -66,8 +66,13 @@ void push_frame_queue(char nodeID, char type, char *message)
     address_id = mesh.getAddress(nodeID);
     RF24NetworkHeader rf_header = RF24NetworkHeader(address_id, type);
     RF24NetworkFrame frame;
-    rf_payload *payload_p = (rf_payload *)(message);
-    frame.message_size = payload_p->len;
+    rf24_msg *payload_p = (rf24_msg *)(message);
+    frame.message_size = sizeof(*payload_p);
+    if (frame.message_size > 22 )
+    {
+        LOG4CPLUS_WARN(logger, " message size is larger than 22!");
+        frame.message_size = 22;
+    }
     memcpy(&frame, &rf_header, sizeof(RF24NetworkHeader));
     memcpy((frame.message_buffer), message, frame.message_size);
     network.frame_queue.push(frame);
@@ -94,6 +99,8 @@ protected:
 		session->readInputBuffer((uint8_t *)buff, length);
 		buff[length] = '\0';
         LOG4CPLUS_DEBUG(logger, "got message " << buff << ". Session id is "<< session->id());
+
+        //rf24_msg *payload_p = 
 
         // to do. Add logic here to send response message
         // session->send(const char *data, uint32_t size);;
