@@ -1,6 +1,7 @@
 #include "time.h"
 #include <stdint.h>
 //time_t time(time_t * timer)
+#define MAGIC_NUM 'M'
 struct i2c_detail
 {
 
@@ -95,6 +96,7 @@ struct rf24_db_msg
 
 struct socket_message
 {
+    char magic_num;
     char type;
     uint16_t nodeID;
     rf24_msg msg;

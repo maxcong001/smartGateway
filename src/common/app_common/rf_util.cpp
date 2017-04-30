@@ -10,10 +10,10 @@ void form_rf_payload(char *buf, rf24_protocol protocol, protocol_detail protocol
     {
         return;
     }
-    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol)), protocol, sizeof(protocol));
-    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol_detail)), protocol_detail, sizeof(protocol_detail));
+    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol)), &protocol, sizeof(protocol));
+    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol_detail)), &protocol_detail, sizeof(protocol_detail));
 }
-void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type);
+void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type)
 //void form_socket_message_from_rf_payload(char *buf, char *payload, char nodeID, char type)
 {
     socket_message* tmp_socket_message = reinterpret_cast<socket_message *>(buf);

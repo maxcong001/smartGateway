@@ -3,6 +3,7 @@
 #include <RF24.h>
 #include <RF24Network.h>
 #include <iostream>
+#include <string>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -100,7 +101,8 @@ protected:
 		buff[length] = '\0';
         LOG4CPLUS_DEBUG(logger, "got message " << buff << ". Session id is "<< session->id());
 
-        socket_message *payload_p = (rf24_msg *)buff;
+        socket_message *payload_p;
+        payload_p = (socket_message *)buff;
         if ((payload_p->magic_num) != MAGIC_NUM)
         {
             LOG4CPLUS_WARN(logger, "magic num miss match! Got invalid message!");
@@ -108,7 +110,7 @@ protected:
             session->send(ret_msg.c_str(), ret_msg.size());
             return;
         }
-        push_frame_queue(payload_p->nodeID, payload_p->type, &(payload_p->msg))
+        push_frame_queue(payload_p->nodeID, payload_p->type, (char *)(&(payload_p->msg)));
 
         string ret_msg("push message to frame queue successfully");
         session->send(ret_msg.c_str(), ret_msg.size());
@@ -171,25 +173,25 @@ int main()
     RF24_tcpServer.wait();
 
 }
-void handle_message(rf_payload *payload_p, RF24NetworkHeader *header_p)
+void handle_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
 {
 
     if (header_p->from_node == 0)
     {
-        LOG4CPLUS_DEBUG(logger, 
-                                    "got node id equals to 0 in the node, it is inserted while received message via socket");
+        LOG4CPLUS_DEBUG(logger, "got node id equals to 0 in the node, it is inserted while received message via socket");
         // send message to node
-        network.write(*header_p, payload_p, payload_p->len + 2);
+        network.write(*header_p, payload_p, sizeof(rf24_msg));
     }
     else
     {
-        LOG4CPLUS_DEBUG(logger, 
-                                    "receive data from node"
+#if 0
+        LOG4CPLUS_DEBUG(logger, "receive data from node"
                                     << header_p->from_node
                                     << ". pin is "
                                     << int((reinterpret_cast<one_wire_onoff_s *>(&(payload_p->data)))->pin)
                                     << ". payload data is "
                                     << int((reinterpret_cast<one_wire_onoff_s *>(&(payload_p->data)))->data));
+
         int sock = node_sockt_fd[mesh.getNodeID(header_p->from_node)];
         if (sock)
         {
@@ -197,74 +199,65 @@ void handle_message(rf_payload *payload_p, RF24NetworkHeader *header_p)
             ret = send(sock, payload_p, payload_p->len + 2, 0);
             LOG4CPLUS_DEBUG(logger, "send return " << ret);
         }
+        // add code here to write data to DB
+#endif
     }
 }
-void handle_G_message(rf_payload *payload_p, RF24NetworkHeader *header_p)
+void handle_G_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
 {
     static string _func = "handle_G_message() ";
-    LOG4CPLUS_TRACE(logger, 
-                                "entered. header_p->from_node is " << header_p->from_node);
+    LOG4CPLUS_TRACE(logger, "entered. header_p->from_node is " << header_p->from_node);
     handle_message(payload_p, header_p);
 }
-void handle_P_message(rf_payload *payload_p, RF24NetworkHeader *header_p)
+void handle_P_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
 {
     static string _func = "handle_P_message() ";
-    LOG4CPLUS_TRACE(logger, 
-                                "entered. header_p->from_node is " << header_p->from_node);
+    LOG4CPLUS_TRACE(logger, "entered. header_p->from_node is " << header_p->from_node);
     handle_message(payload_p, header_p);
 }
 
-void handle_S_message(rf_payload *payload_p, RF24NetworkHeader *header_p)
+void handle_S_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
 {
     static string _func = "handle_S_message() ";
-    LOG4CPLUS_TRACE(logger, 
-                                "entered. header_p->from_node is " << header_p->from_node);
+    LOG4CPLUS_TRACE(logger, "entered. header_p->from_node is " << header_p->from_node);
     handle_message(payload_p, header_p);
 }
-void handle_R_message(rf_payload *payload_p, RF24NetworkHeader *header_p)
+void handle_R_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
 {
     static string _func = "handle_R_message() ";
-    LOG4CPLUS_TRACE(logger, 
-                                "entered. header_p->from_node is " << header_p->from_node);
+    LOG4CPLUS_TRACE(logger, "entered. header_p->from_node is " << header_p->from_node);
     handle_message(payload_p, header_p);
 }
 
 void handle_incoming_message(char *buf, RF24NetworkHeader *header_p)
 {
     static string _func = "handle_incoming_message() ";
-    LOG4CPLUS_TRACE(logger, 
-                                "entered! header_p->type is "
+    LOG4CPLUS_TRACE(logger, "entered! header_p->type is "
                                 << header_p->type);
-    rf_payload *payload_p = (rf_payload *)buf;
+    rf24_msg *payload_p = (rf24_msg *)buf;
     switch (header_p->type)
     {
     case 'G':
-        LOG4CPLUS_TRACE(logger, 
-                                    "receive a 'G' message!");
+        LOG4CPLUS_TRACE(logger, "receive a 'G' message!");
         handle_G_message(payload_p, header_p);
         break;
     case 'P':
-        LOG4CPLUS_TRACE(logger, 
-                                    "receive a 'P' message!");
+        LOG4CPLUS_TRACE(logger, "receive a 'P' message!");
         handle_P_message(payload_p, header_p);
         break;
     case 'S':
-        LOG4CPLUS_TRACE(logger, 
-                                    "receive a 'S' message!");
+        LOG4CPLUS_TRACE(logger, "receive a 'S' message!");
         handle_S_message(payload_p, header_p);
         break;
     case 'R':
-        LOG4CPLUS_TRACE(logger, 
-                                    "receive a 'R' message!");
+        LOG4CPLUS_TRACE(logger, "receive a 'R' message!");
         handle_R_message(payload_p, header_p);
         break;
     case 'M':
-        LOG4CPLUS_TRACE(logger, 
-                                    "receive a 'M' message!");
+        LOG4CPLUS_TRACE(logger, "receive a 'M' message!");
         break;
     default:
-        LOG4CPLUS_ERROR(logger, 
-                                    "receive an invalid  message!");
+        LOG4CPLUS_ERROR(logger, "receive an invalid  message!");
         break;
     }
 }
@@ -328,8 +321,7 @@ void *start_monitor(void *)
             memset(message_buf, 0, 32 - sizeof(RF24NetworkHeader));
             uint16_t payload_len;
             payload_len = network.read(header, message_buf, 32 - sizeof(RF24NetworkHeader));
-            LOG4CPLUS_TRACE(logger, 
-                                        "got "
+            LOG4CPLUS_TRACE(logger, "got "
                                         << payload_len
                                         << " byte message form RF24");
             // handle coming message

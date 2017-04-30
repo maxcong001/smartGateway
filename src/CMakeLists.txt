@@ -21,8 +21,9 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include/common/RF24Driver)
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/third_party/github/translib/include)
 
 # Include sub directory adapters and utils.
-ADD_SUBDIRECTORY(server/http_server)
+
 ADD_SUBDIRECTORY(server/RF24_server)
+ADD_SUBDIRECTORY(server/http_server)
 ADD_SUBDIRECTORY(node)
 
 # Collect all source files.
