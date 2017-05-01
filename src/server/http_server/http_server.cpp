@@ -18,6 +18,7 @@
 
 #define MYPORT 25341
 #define BUFFER_SIZE 1024
+#if 0
 // the format is /x/x/x/x
 void parse_url(char *url, int &nodeID, int &pin, int &protocol, int &get_set, int &data)
 {
@@ -232,5 +233,10 @@ int main()
     event_base_dispatch(base);
     evhttp_free(http_server);
 
+    return 0;
+}
+#endif
+int main()
+{
     return 0;
 }
