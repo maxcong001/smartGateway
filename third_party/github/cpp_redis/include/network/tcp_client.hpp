@@ -22,130 +22,81 @@
 
 #pragma once
 
-#include <atomic>
-#include <cstdint>
-#include <mutex>
-#include <queue>
-#include <string>
+#include <tcp_client_iface.hpp>
+#include <redis_error.hpp>
 
-#include <tacopie/network/io_service.hpp>
-#include <tacopie/network/tcp_socket.hpp>
-#include <tacopie/typedefs.hpp>
+#include <tacopie.hpp>
 
-namespace tacopie {
+namespace cpp_redis {
 
-class tcp_client {
+namespace network {
+
+class tcp_client : public tcp_client_iface {
 public:
   //! ctor & dtor
-  tcp_client(void);
-  ~tcp_client(void);
-
-  //! custom ctor
-  //! build socket from existing socket
-  explicit tcp_client(tcp_socket&& socket);
-
-  //! copy ctor & assignment operator
-  tcp_client(const tcp_client&) = delete;
-  tcp_client& operator=(const tcp_client&) = delete;
-
-public:
-  //! comparison operator
-  bool operator==(const tcp_client& rhs) const;
-  bool operator!=(const tcp_client& rhs) const;
+  tcp_client(void)  = default;
+  ~tcp_client(void) = default;
 
 public:
   //! start & stop the tcp client
-  void connect(const std::string& addr, std::uint32_t port);
-  void disconnect(bool wait_for_removal = false);
+  void
+  connect(const std::string& addr, std::uint32_t port) {
+    m_client.connect(addr, port);
+  }
+
+  void
+  disconnect(bool wait_for_removal = false) {
+    m_client.disconnect(wait_for_removal);
+  }
 
   //! returns whether the client is currently connected or not
-  bool is_connected(void) const;
-
-private:
-  //! Call disconnection handler
-  void call_disconnection_handler(void);
-
-public:
-  //! structure to store read requests result
-  struct read_result {
-    bool success;
-    std::vector<char> buffer;
-  };
-
-  //! structure to store write requests result
-  struct write_result {
-    bool success;
-    std::size_t size;
-  };
-
-public:
-  //! async read & write completion callbacks
-  typedef std::function<void(read_result&)> async_read_callback_t;
-  typedef std::function<void(write_result&)> async_write_callback_t;
-
-public:
-  //! structure to store read requests information
-  struct read_request {
-    std::size_t size;
-    async_read_callback_t async_read_callback;
-  };
-
-  //! structure to store write requests information
-  struct write_request {
-    std::vector<char> buffer;
-    async_write_callback_t async_write_callback;
-  };
+  bool
+  is_connected(void) const {
+    return m_client.is_connected();
+  }
 
 public:
   //! async read & write operations
-  void async_read(const read_request& request);
-  void async_write(const write_request& request);
+  void
+  async_read(read_request& request) {
+    auto callback = std::move(request.async_read_callback);
+
+    m_client.async_read({request.size, [=](tacopie::tcp_client::read_result& result) {
+                           if (!callback) {
+                             return;
+                           }
+
+                           read_result converted_result = {result.success, std::move(result.buffer)};
+                           callback(converted_result);
+                         }});
+  }
+
+  void
+  async_write(write_request& request) {
+    auto callback = std::move(request.async_write_callback);
+
+    m_client.async_write({std::move(request.buffer), [=](tacopie::tcp_client::write_result& result) {
+                            if (!callback) {
+                              return;
+                            }
+
+                            write_result converted_result = {result.success, result.size};
+                            callback(converted_result);
+                          }});
+  }
 
 public:
-  //! socket getter
-  tacopie::tcp_socket& get_socket(void);
-  const tacopie::tcp_socket& get_socket(void) const;
-
-public:
-  //! disconnection handle
-  typedef std::function<void()> disconnection_handler_t;
-
   //! set on disconnection handler
-  void set_on_disconnection_handler(const disconnection_handler_t& disconnection_handler);
+  void
+  set_on_disconnection_handler(const disconnection_handler_t& disconnection_handler) {
+    m_client.set_on_disconnection_handler(disconnection_handler);
+  }
 
 private:
-  //! io service read callback
-  void on_read_available(fd_t fd);
-
-  //! io service write callback
-  void on_write_available(fd_t fd);
-
-private:
-  //! process read & write operations when available
-  async_read_callback_t process_read(read_result& result);
-  async_write_callback_t process_write(write_result& result);
-
-private:
-  //! store io_service
-  //! prevent deletion of io_service before the tcp_client itself
-  std::shared_ptr<io_service> m_io_service;
-
-  //! client socket
-  tacopie::tcp_socket m_socket;
-
-  //! whether the client is currently connected or not
-  std::atomic<bool> m_is_connected = ATOMIC_VAR_INIT(false);
-
-  //! read & write requests
-  std::queue<read_request> m_read_requests;
-  std::queue<write_request> m_write_requests;
-
-  //! thread safety
-  std::mutex m_read_requests_mtx;
-  std::mutex m_write_requests_mtx;
-
-  //! disconnection handler
-  disconnection_handler_t m_disconnection_handler;
+  //! tcp client for redis connection
+  tacopie::tcp_client m_client;
 };
 
-} //! tacopie
+} //! network
+
+} //! cpp_redis

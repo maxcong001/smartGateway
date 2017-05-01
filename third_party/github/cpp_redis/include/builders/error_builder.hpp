@@ -1,6 +1,6 @@
-// MIT License
+// The MIT License (MIT)
 //
-// Copyright (c) 2016-2017 Simon Ninon <simon.ninon@gmail.com>
+// Copyright (c) 2015-2017 Simon Ninon <simon.ninon@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,55 +20,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <tacopie/error.hpp>
-#include <tacopie/network/self_pipe.hpp>
+#pragma once
 
-#include <fcntl.h>
-#include <unistd.h>
+#include <builder_iface.hpp>
+#include <simple_string_builder.hpp>
+#include <reply.hpp>
 
-namespace tacopie {
+namespace cpp_redis {
 
-//!
-//! ctor & dtor
-//!
-self_pipe::self_pipe(void)
-: m_fds{__TACOPIE_INVALID_FD, __TACOPIE_INVALID_FD} {
-  if (pipe(m_fds) == -1) { __TACOPIE_THROW(error, "pipe() failure"); }
-}
+namespace builders {
 
-self_pipe::~self_pipe(void) {
-  close(m_fds[0]);
-  close(m_fds[1]);
-}
+class error_builder : public builder_iface {
+public:
+  //! ctor & dtor
+  error_builder(void)  = default;
+  ~error_builder(void) = default;
 
-//!
-//! get rd/wr fds
-//!
-fd_t
-self_pipe::get_read_fd(void) const {
-  return m_fds[0];
-}
+  //! copy ctor & assignment operator
+  error_builder(const error_builder&) = delete;
+  error_builder& operator=(const error_builder&) = delete;
 
-fd_t
-self_pipe::get_write_fd(void) const {
-  return m_fds[1];
-}
+public:
+  //! builder_iface impl
+  builder_iface& operator<<(std::string&);
+  bool reply_ready(void) const;
+  reply get_reply(void) const;
 
-//!
-//! notify
-//!
-void
-self_pipe::notify(void) {
-  (void) write(m_fds[1], "a", 1);
-}
+  //! getter
+  const std::string& get_error(void) const;
 
-//!
-//! clr buffer
-//!
-void
-self_pipe::clr_buffer(void) {
-  char buf[1024];
-  (void) read(m_fds[0], buf, 1024);
-}
+private:
+  simple_string_builder m_string_builder;
+  reply m_reply;
+};
 
-} //! tacopie
+} //! builders
+
+} //! cpp_redis

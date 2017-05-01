@@ -20,14 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <tacopie/error.hpp>
-#include <tacopie/logger.hpp>
-#include <tacopie/network/io_service.hpp>
+#include <error.hpp>
+#include <logger.hpp>
+#include <io_service.hpp>
 
 #include <fcntl.h>
 #include <unistd.h>
 
-namespace tacopie {
+namespace cpp_redis {
 
 //!
 //! default io_service getter & setter
@@ -45,11 +45,11 @@ get_default_io_service(void) {
 void
 set_default_io_service(const std::shared_ptr<io_service>& service) {
   if (service) {
-    __TACOPIE_LOG(debug, "setting new default_io_service");
+    __cpp_redis_LOG(debug, "setting new default_io_service");
     io_service_default_instance = service;
   }
   else {
-    __TACOPIE_LOG(warn, "setting new default_io_service failed because the service is null");
+    __cpp_redis_LOG(warn, "setting new default_io_service failed because the service is null");
   }
 }
 
@@ -59,15 +59,15 @@ set_default_io_service(const std::shared_ptr<io_service>& service) {
 
 io_service::io_service(void)
 : m_should_stop(false)
-, m_callback_workers(__TACOPIE_IO_SERVICE_NB_WORKERS) {
-  __TACOPIE_LOG(debug, "create io_service");
+, m_callback_workers(__cpp_redis_IO_SERVICE_NB_WORKERS) {
+  __cpp_redis_LOG(debug, "create io_service");
 
   //! Start worker after everything has been initialized
   m_poll_worker = std::thread(std::bind(&io_service::poll, this));
 }
 
 io_service::~io_service(void) {
-  __TACOPIE_LOG(debug, "destroy io_service");
+  __cpp_redis_LOG(debug, "destroy io_service");
 
   m_should_stop = true;
 
@@ -82,19 +82,19 @@ io_service::~io_service(void) {
 
 void
 io_service::poll(void) {
-  __TACOPIE_LOG(debug, "starting poll() worker");
+  __cpp_redis_LOG(debug, "starting poll() worker");
 
   while (!m_should_stop) {
     int ndfs = init_poll_fds_info();
 
-    __TACOPIE_LOG(debug, "polling fds");
+    __cpp_redis_LOG(debug, "polling fds");
     if (::select(ndfs, &m_rd_set, &m_wr_set, NULL, NULL) > 0) { process_events(); }
     else {
-      __TACOPIE_LOG(debug, "poll woke up, but nothing to process");
+      __cpp_redis_LOG(debug, "poll woke up, but nothing to process");
     }
   }
 
-  __TACOPIE_LOG(debug, "stop poll() worker");
+  __cpp_redis_LOG(debug, "stop poll() worker");
 }
 
 //!
@@ -105,7 +105,7 @@ void
 io_service::process_events(void) {
   std::lock_guard<std::mutex> lock(m_tracked_sockets_mtx);
 
-  __TACOPIE_LOG(debug, "processing events");
+  __cpp_redis_LOG(debug, "processing events");
 
   for (const auto& fd : m_polled_fds) {
     if (fd == m_notifier.get_read_fd() && FD_ISSET(fd, &m_rd_set)) {
@@ -122,7 +122,7 @@ io_service::process_events(void) {
     if (FD_ISSET(fd, &m_wr_set) && socket.wr_callback && !socket.is_executing_wr_callback) { process_wr_event(fd, socket); }
 
     if (socket.marked_for_untrack && !socket.is_executing_rd_callback && !socket.is_executing_wr_callback) {
-      __TACOPIE_LOG(debug, "untrack socket");
+      __cpp_redis_LOG(debug, "untrack socket");
       m_tracked_sockets.erase(it);
       m_wait_for_removal_condvar.notify_all();
     }
@@ -133,14 +133,14 @@ io_service::process_events(void) {
 
 void
 io_service::process_rd_event(const fd_t& fd, tracked_socket& socket) {
-  __TACOPIE_LOG(debug, "processing read event");
+  __cpp_redis_LOG(debug, "processing read event");
 
   auto rd_callback = socket.rd_callback;
 
   socket.is_executing_rd_callback = true;
 
   m_callback_workers << [=] {
-    __TACOPIE_LOG(debug, "execute read callback");
+    __cpp_redis_LOG(debug, "execute read callback");
     rd_callback(fd);
 
     std::lock_guard<std::mutex> lock(m_tracked_sockets_mtx);
@@ -152,7 +152,7 @@ io_service::process_rd_event(const fd_t& fd, tracked_socket& socket) {
     socket.is_executing_rd_callback = false;
 
     if (socket.marked_for_untrack && !socket.is_executing_wr_callback) {
-      __TACOPIE_LOG(debug, "untrack socket");
+      __cpp_redis_LOG(debug, "untrack socket");
       m_tracked_sockets.erase(it);
       m_wait_for_removal_condvar.notify_all();
     }
@@ -163,14 +163,14 @@ io_service::process_rd_event(const fd_t& fd, tracked_socket& socket) {
 
 void
 io_service::process_wr_event(const fd_t& fd, tracked_socket& socket) {
-  __TACOPIE_LOG(debug, "processing write event");
+  __cpp_redis_LOG(debug, "processing write event");
 
   auto wr_callback = socket.wr_callback;
 
   socket.is_executing_wr_callback = true;
 
   m_callback_workers << [=] {
-    __TACOPIE_LOG(debug, "execute write callback");
+    __cpp_redis_LOG(debug, "execute write callback");
     wr_callback(fd);
 
     std::lock_guard<std::mutex> lock(m_tracked_sockets_mtx);
@@ -182,7 +182,7 @@ io_service::process_wr_event(const fd_t& fd, tracked_socket& socket) {
     socket.is_executing_wr_callback = false;
 
     if (socket.marked_for_untrack && !socket.is_executing_rd_callback) {
-      __TACOPIE_LOG(debug, "untrack socket");
+      __cpp_redis_LOG(debug, "untrack socket");
       m_tracked_sockets.erase(it);
       m_wait_for_removal_condvar.notify_all();
     }
@@ -231,7 +231,7 @@ void
 io_service::track(const tcp_socket& socket, const event_callback_t& rd_callback, const event_callback_t& wr_callback) {
   std::lock_guard<std::mutex> lock(m_tracked_sockets_mtx);
 
-  __TACOPIE_LOG(debug, "track new socket");
+  __cpp_redis_LOG(debug, "track new socket");
 
   auto& track_info       = m_tracked_sockets[socket.get_fd()];
   track_info.rd_callback = rd_callback;
@@ -244,7 +244,7 @@ void
 io_service::set_rd_callback(const tcp_socket& socket, const event_callback_t& event_callback) {
   std::lock_guard<std::mutex> lock(m_tracked_sockets_mtx);
 
-  __TACOPIE_LOG(debug, "update read socket tracking callback");
+  __cpp_redis_LOG(debug, "update read socket tracking callback");
 
   auto& track_info       = m_tracked_sockets[socket.get_fd()];
   track_info.rd_callback = event_callback;
@@ -256,7 +256,7 @@ void
 io_service::set_wr_callback(const tcp_socket& socket, const event_callback_t& event_callback) {
   std::lock_guard<std::mutex> lock(m_tracked_sockets_mtx);
 
-  __TACOPIE_LOG(debug, "update write socket tracking callback");
+  __cpp_redis_LOG(debug, "update write socket tracking callback");
 
   auto& track_info       = m_tracked_sockets[socket.get_fd()];
   track_info.wr_callback = event_callback;
@@ -273,11 +273,11 @@ io_service::untrack(const tcp_socket& socket) {
   if (it == m_tracked_sockets.end()) { return; }
 
   if (it->second.is_executing_rd_callback || it->second.is_executing_wr_callback) {
-    __TACOPIE_LOG(debug, "mark socket for untracking");
+    __cpp_redis_LOG(debug, "mark socket for untracking");
     it->second.marked_for_untrack = true;
   }
   else {
-    __TACOPIE_LOG(debug, "untrack socket");
+    __cpp_redis_LOG(debug, "untrack socket");
     m_tracked_sockets.erase(it);
     m_wait_for_removal_condvar.notify_all();
   }
@@ -299,4 +299,4 @@ io_service::wait_for_removal(const tcp_socket& socket) {
   });
 }
 
-} //! tacopie
+} //! cpp_redis

@@ -20,9 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <tacopie/error.hpp>
-#include <tacopie/logger.hpp>
-#include <tacopie/network/tcp_server.hpp>
+#include <error.hpp>
+#include <logger.hpp>
+#include <tcp_server.hpp>
 
 #include <cstring>
 
@@ -33,17 +33,17 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-namespace tacopie {
+namespace cpp_redis {
 
 //!
 //! ctor & dtor
 //!
 
 tcp_socket::tcp_socket(void)
-: m_fd(__TACOPIE_INVALID_FD)
+: m_fd(__cpp_redis_INVALID_FD)
 , m_host("")
 , m_port(0)
-, m_type(type::UNKNOWN) { __TACOPIE_LOG(debug, "create tcp_socket"); }
+, m_type(type::UNKNOWN) { __cpp_redis_LOG(debug, "create tcp_socket"); }
 
 //!
 //! custom ctor
@@ -54,7 +54,7 @@ tcp_socket::tcp_socket(fd_t fd, const std::string& host, std::uint32_t port, typ
 : m_fd(fd)
 , m_host(host)
 , m_port(port)
-, m_type(t) { __TACOPIE_LOG(debug, "create tcp_socket"); }
+, m_type(t) { __cpp_redis_LOG(debug, "create tcp_socket"); }
 
 //!
 //! Move constructor
@@ -65,10 +65,10 @@ tcp_socket::tcp_socket(tcp_socket&& socket)
 , m_host(socket.m_host)
 , m_port(socket.m_port)
 , m_type(socket.m_type) {
-  socket.m_fd   = __TACOPIE_INVALID_FD;
+  socket.m_fd   = __cpp_redis_INVALID_FD;
   socket.m_type = type::UNKNOWN;
 
-  __TACOPIE_LOG(debug, "moved tcp_socket");
+  __cpp_redis_LOG(debug, "moved tcp_socket");
 }
 
 //!
@@ -84,9 +84,9 @@ tcp_socket::recv(std::size_t size_to_read) {
 
   ssize_t rd_size = ::recv(m_fd, const_cast<char*>(data.data()), size_to_read, 0);
 
-  if (rd_size == -1) { __TACOPIE_THROW(error, "recv() failure"); }
+  if (rd_size == -1) { __cpp_redis_THROW(error, "recv() failure"); }
 
-  if (rd_size == 0) { __TACOPIE_THROW(warn, "nothing to read, socket has been closed by remote host"); }
+  if (rd_size == 0) { __cpp_redis_THROW(warn, "nothing to read, socket has been closed by remote host"); }
 
   data.resize(rd_size);
 
@@ -100,7 +100,7 @@ tcp_socket::send(const std::vector<char>& data, std::size_t size_to_write) {
 
   ssize_t wr_size = ::send(m_fd, data.data(), size_to_write, 0);
 
-  if (wr_size == -1) { __TACOPIE_THROW(error, "send() failure"); }
+  if (wr_size == -1) { __cpp_redis_THROW(error, "send() failure"); }
 
   return wr_size;
 }
@@ -132,7 +132,7 @@ tcp_socket::connect(const std::string& host, std::uint32_t port) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family   = AF_INET;
 
-    if (getaddrinfo(host.c_str(), nullptr, &hints, &result) != 0) { __TACOPIE_THROW(error, "getaddrinfo() failure"); }
+    if (getaddrinfo(host.c_str(), nullptr, &hints, &result) != 0) { __cpp_redis_THROW(error, "getaddrinfo() failure"); }
 
     std::memset(&server_addr_in, 0, sizeof(server_addr_in));
     server_addr_in.sin_addr   = ((struct sockaddr_in*) (result->ai_addr))->sin_addr;
@@ -145,7 +145,7 @@ tcp_socket::connect(const std::string& host, std::uint32_t port) {
   socklen_t addr_len                 = is_unix_socket ? sizeof(server_addr_un) : sizeof(server_addr_in);
   const struct sockaddr* server_addr = is_unix_socket ? (const struct sockaddr*) &server_addr_un : (const struct sockaddr*) &server_addr_in;
 
-  if (::connect(m_fd, server_addr, addr_len) == -1) { __TACOPIE_THROW(error, "connect() failure"); }
+  if (::connect(m_fd, server_addr, addr_len) == -1) { __cpp_redis_THROW(error, "connect() failure"); }
 }
 
 //!
@@ -175,7 +175,7 @@ tcp_socket::bind(const std::string& host, std::uint32_t port) {
     struct addrinfo* result = nullptr;
 
     if (getaddrinfo(host.c_str(), nullptr, nullptr, &result) != 0) {
-      __TACOPIE_THROW(error, "getaddrinfo() failure");
+      __cpp_redis_THROW(error, "getaddrinfo() failure");
     }
 
     std::memset(&server_addr_in, 0, sizeof(server_addr_in));
@@ -189,7 +189,7 @@ tcp_socket::bind(const std::string& host, std::uint32_t port) {
   socklen_t addr_len                 = is_unix_socket ? sizeof(server_addr_un) : sizeof(server_addr_in);
   const struct sockaddr* server_addr = is_unix_socket ? (const struct sockaddr*) &server_addr_un : (const struct sockaddr*) &server_addr_in;
 
-  if (::bind(m_fd, server_addr, addr_len) == -1) { __TACOPIE_THROW(error, "bind() failure"); }
+  if (::bind(m_fd, server_addr, addr_len) == -1) { __cpp_redis_THROW(error, "bind() failure"); }
 }
 
 void
@@ -197,7 +197,7 @@ tcp_socket::listen(std::size_t max_connection_queue) {
   create_socket_if_necessary();
   check_or_set_type(type::SERVER);
 
-  if (::listen(m_fd, max_connection_queue) == -1) { __TACOPIE_THROW(debug, "listen() failure"); }
+  if (::listen(m_fd, max_connection_queue) == -1) { __cpp_redis_THROW(debug, "listen() failure"); }
 }
 
 tcp_socket
@@ -210,7 +210,7 @@ tcp_socket::accept(void) {
 
   fd_t client_fd = ::accept(m_fd, (struct sockaddr*) &client_info, &client_info_struct_size);
 
-  if (client_fd == __TACOPIE_INVALID_FD) { __TACOPIE_THROW(error, "accept() failure"); }
+  if (client_fd == __cpp_redis_INVALID_FD) { __cpp_redis_THROW(error, "accept() failure"); }
 
   //! TODO: init with real client addr
   return {client_fd, "", client_info.sin_port, type::CLIENT};
@@ -222,12 +222,12 @@ tcp_socket::accept(void) {
 
 void
 tcp_socket::close(void) {
-  if (m_fd != __TACOPIE_INVALID_FD) {
-    __TACOPIE_LOG(debug, "close socket");
+  if (m_fd != __cpp_redis_INVALID_FD) {
+    __cpp_redis_LOG(debug, "close socket");
     ::close(m_fd);
   }
 
-  m_fd   = __TACOPIE_INVALID_FD;
+  m_fd   = __cpp_redis_INVALID_FD;
   m_type = type::UNKNOWN;
 }
 
@@ -237,14 +237,14 @@ tcp_socket::close(void) {
 
 void
 tcp_socket::create_socket_if_necessary(void) {
-  if (m_fd != __TACOPIE_INVALID_FD) { return; }
+  if (m_fd != __cpp_redis_INVALID_FD) { return; }
 
   //! new TCP socket
   //! handle case of unix sockets by checking whether the port is 0 or not
   m_fd   = socket(m_port == 0 ? AF_UNIX : AF_INET, SOCK_STREAM, 0);
   m_type = type::UNKNOWN;
 
-  if (m_fd == __TACOPIE_INVALID_FD) { __TACOPIE_THROW(error, "tcp_socket::create_socket_if_necessary: socket() failure"); }
+  if (m_fd == __cpp_redis_INVALID_FD) { __cpp_redis_THROW(error, "tcp_socket::create_socket_if_necessary: socket() failure"); }
 }
 
 //!
@@ -254,7 +254,7 @@ tcp_socket::create_socket_if_necessary(void) {
 
 void
 tcp_socket::check_or_set_type(type t) {
-  if (m_type != type::UNKNOWN && m_type != t) { __TACOPIE_THROW(error, "trying to perform invalid operation on socket"); }
+  if (m_type != type::UNKNOWN && m_type != t) { __cpp_redis_THROW(error, "trying to perform invalid operation on socket"); }
 
   m_type = t;
 }
@@ -314,4 +314,4 @@ tcp_socket::operator!=(const tcp_socket& rhs) const {
   return !operator==(rhs);
 }
 
-} //! tacopie
+} //! cpp_redis

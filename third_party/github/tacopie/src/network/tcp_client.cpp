@@ -20,11 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+
 #include <error.hpp>
 #include <logger.hpp>
 #include <tcp_client.hpp>
 
-namespace tacopie {
+namespace cpp_redis {
 
 //!
 //! ctor & dtor
@@ -32,10 +33,10 @@ namespace tacopie {
 
 tcp_client::tcp_client(void)
 : m_io_service(get_default_io_service())
-, m_disconnection_handler(nullptr) { __TACOPIE_LOG(debug, "create tcp_client"); }
+, m_disconnection_handler(nullptr) { __cpp_redis_LOG(debug, "create tcp_client"); }
 
 tcp_client::~tcp_client(void) {
-  __TACOPIE_LOG(debug, "destroy tcp_client");
+  __cpp_redis_LOG(debug, "destroy tcp_client");
   disconnect(true);
 }
 
@@ -49,7 +50,7 @@ tcp_client::tcp_client(tcp_socket&& socket)
 , m_socket(std::move(socket))
 , m_disconnection_handler(nullptr) {
   m_is_connected = true;
-  __TACOPIE_LOG(debug, "create tcp_client");
+  __cpp_redis_LOG(debug, "create tcp_client");
   m_io_service->track(m_socket);
 }
 
@@ -59,14 +60,14 @@ tcp_client::tcp_client(tcp_socket&& socket)
 
 void
 tcp_client::connect(const std::string& host, std::uint32_t port) {
-  if (is_connected()) { __TACOPIE_THROW(warn, "tcp_client is already connected"); }
+  if (is_connected()) { __cpp_redis_THROW(warn, "tcp_client is already connected"); }
 
   m_socket.connect(host, port);
   m_io_service->track(m_socket);
 
   m_is_connected = true;
 
-  __TACOPIE_LOG(info, "tcp_client connected");
+  __cpp_redis_LOG(info, "tcp_client connected");
 }
 
 void
@@ -79,7 +80,7 @@ tcp_client::disconnect(bool wait_for_removal) {
   if (wait_for_removal) { m_io_service->wait_for_removal(m_socket); }
   m_socket.close();
 
-  __TACOPIE_LOG(info, "tcp_client disconnected");
+  __cpp_redis_LOG(info, "tcp_client disconnected");
 }
 
 //!
@@ -88,7 +89,7 @@ tcp_client::disconnect(bool wait_for_removal) {
 void
 tcp_client::call_disconnection_handler(void) {
   if (m_disconnection_handler) {
-    __TACOPIE_LOG(debug, "call disconnection handler");
+    __cpp_redis_LOG(debug, "call disconnection handler");
     m_disconnection_handler();
   }
 }
@@ -99,13 +100,13 @@ tcp_client::call_disconnection_handler(void) {
 
 void
 tcp_client::on_read_available(fd_t) {
-  __TACOPIE_LOG(info, "read available");
+  __cpp_redis_LOG(info, "read available");
 
   read_result result;
   auto callback = process_read(result);
 
   if (!result.success) {
-    __TACOPIE_LOG(warn, "read operation failure");
+    __cpp_redis_LOG(warn, "read operation failure");
     disconnect();
   }
 
@@ -120,13 +121,13 @@ tcp_client::on_read_available(fd_t) {
 
 void
 tcp_client::on_write_available(fd_t) {
-  __TACOPIE_LOG(info, "write available");
+  __cpp_redis_LOG(info, "write available");
 
   write_result result;
   auto callback = process_write(result);
 
   if (!result.success) {
-    __TACOPIE_LOG(warn, "write operation failure");
+    __cpp_redis_LOG(warn, "write operation failure");
     disconnect();
   }
 
@@ -152,7 +153,7 @@ tcp_client::process_read(read_result& result) {
     result.buffer  = m_socket.recv(request.size);
     result.success = true;
   }
-  catch (const tacopie::tacopie_error&) {
+  catch (const cpp_redis::cpp_redis_error&) {
     result.success = false;
   }
 
@@ -176,7 +177,7 @@ tcp_client::process_write(write_result& result) {
     result.size    = m_socket.send(request.buffer, request.buffer.size());
     result.success = true;
   }
-  catch (const tacopie::tacopie_error&) {
+  catch (const cpp_redis::cpp_redis_error&) {
     result.success = false;
   }
 
@@ -200,7 +201,7 @@ tcp_client::async_read(const read_request& request) {
     m_read_requests.push(request);
   }
   else {
-    __TACOPIE_THROW(warn, "tcp_client is disconnected");
+    __cpp_redis_THROW(warn, "tcp_client is disconnected");
   }
 }
 
@@ -213,7 +214,7 @@ tcp_client::async_write(const write_request& request) {
     m_write_requests.push(request);
   }
   else {
-    __TACOPIE_THROW(warn, "tcp_client is disconnected");
+    __cpp_redis_THROW(warn, "tcp_client is disconnected");
   }
 }
 
@@ -221,12 +222,12 @@ tcp_client::async_write(const write_request& request) {
 //! socket getter
 //!
 
-tacopie::tcp_socket&
+cpp_redis::tcp_socket&
 tcp_client::get_socket(void) {
   return m_socket;
 }
 
-const tacopie::tcp_socket&
+const cpp_redis::tcp_socket&
 tcp_client::get_socket(void) const {
   return m_socket;
 }
@@ -262,4 +263,4 @@ tcp_client::operator!=(const tcp_client& rhs) const {
   return !operator==(rhs);
 }
 
-} //! tacopie
+} //! cpp_redis

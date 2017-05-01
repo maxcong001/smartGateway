@@ -23,7 +23,7 @@
 #include <logger.hpp>
 #include <thread_pool.hpp>
 
-namespace tacopie {
+namespace cpp_redis {
 
 namespace utils {
 
@@ -32,13 +32,13 @@ namespace utils {
 //!
 
 thread_pool::thread_pool(std::size_t nb_threads) {
-  __TACOPIE_LOG(debug, "create thread_pool");
+  __cpp_redis_LOG(debug, "create thread_pool");
 
   for (std::size_t i = 0; i < nb_threads; ++i) { m_workers.push_back(std::thread(std::bind(&thread_pool::run, this))); }
 }
 
 thread_pool::~thread_pool(void) {
-  __TACOPIE_LOG(debug, "destroy thread_pool");
+  __cpp_redis_LOG(debug, "destroy thread_pool");
   stop();
 }
 
@@ -48,18 +48,18 @@ thread_pool::~thread_pool(void) {
 
 void
 thread_pool::run(void) {
-  __TACOPIE_LOG(debug, "start run() worker");
+  __cpp_redis_LOG(debug, "start run() worker");
 
   while (!m_should_stop) {
     task_t task = fetch_task();
 
     if (task) {
-      __TACOPIE_LOG(debug, "execute task");
+      __cpp_redis_LOG(debug, "execute task");
       task();
     }
   }
 
-  __TACOPIE_LOG(debug, "stop run() worker");
+  __cpp_redis_LOG(debug, "stop run() worker");
 }
 
 //!
@@ -77,7 +77,7 @@ thread_pool::stop(void) {
 
   m_workers.clear();
 
-  __TACOPIE_LOG(debug, "thread_pool stopped");
+  __cpp_redis_LOG(debug, "thread_pool stopped");
 }
 
 //!
@@ -96,7 +96,7 @@ thread_pool::task_t
 thread_pool::fetch_task(void) {
   std::unique_lock<std::mutex> lock(m_tasks_mtx);
 
-  __TACOPIE_LOG(debug, "waiting to fetch task");
+  __cpp_redis_LOG(debug, "waiting to fetch task");
 
   m_tasks_condvar.wait(lock, [&] { return m_should_stop || !m_tasks.empty(); });
 
@@ -115,7 +115,7 @@ void
 thread_pool::add_task(const task_t& task) {
   std::lock_guard<std::mutex> lock(m_tasks_mtx);
 
-  __TACOPIE_LOG(debug, "add task to thread_pool");
+  __cpp_redis_LOG(debug, "add task to thread_pool");
 
   m_tasks.push(task);
   m_tasks_condvar.notify_all();
@@ -130,4 +130,4 @@ thread_pool::operator<<(const task_t& task) {
 
 } //! utils
 
-} //! tacopie
+} //! cpp_redis

@@ -1,6 +1,6 @@
-// MIT License
+// The MIT License (MIT)
 //
-// Copyright (c) 2016-2017 Simon Ninon <simon.ninon@gmail.com>
+// Copyright (c) 2015-2017 Simon Ninon <simon.ninon@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,31 +20,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <error.hpp>
+#pragma once
 
-namespace tacopie {
+#include <builder_iface.hpp>
+#include <reply.hpp>
 
-//!
-//! ctor & dtor
-//!
+#include <stdint.h>
 
-tacopie_error::tacopie_error(const std::string& what, const std::string& file, std::size_t line)
-: std::runtime_error(what)
-, m_file(file)
-, m_line(line) {}
+namespace cpp_redis {
 
-//!
-//! get location of the error
-//!
+namespace builders {
 
-const std::string&
-tacopie_error::get_file(void) const {
-  return m_file;
-}
+class integer_builder : public builder_iface {
+public:
+  //! ctor & dtor
+  integer_builder(void);
+  ~integer_builder(void) = default;
 
-std::size_t
-tacopie_error::get_line(void) const {
-  return m_line;
-}
+  //! copy ctor & assignment operator
+  integer_builder(const integer_builder&) = delete;
+  integer_builder& operator=(const integer_builder&) = delete;
 
-} //! tacopie
+public:
+  //! builder_iface impl
+  builder_iface& operator<<(std::string&);
+  bool reply_ready(void) const;
+  reply get_reply(void) const;
+
+  //! getter
+  int64_t get_integer(void) const;
+
+private:
+  int64_t m_nbr;
+  char m_negative_multiplicator;
+  bool m_reply_ready;
+
+  reply m_reply;
+};
+
+} //! builders
+
+} //! cpp_redis

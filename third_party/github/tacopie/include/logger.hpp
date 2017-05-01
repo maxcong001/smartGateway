@@ -1,6 +1,6 @@
-// The MIT License (MIT)
+// MIT License
 //
-// Copyright (c) 2015-2017 Simon Ninon <simon.ninon@gmail.com>
+// Copyright (c) 2016-2017 Simon Ninon <simon.ninon@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -89,10 +89,10 @@ void warn(const std::string& msg, const std::string& file, std::size_t line);
 void error(const std::string& msg, const std::string& file, std::size_t line);
 
 //! convenience macro to log with file and line information
-#ifdef __CPP_REDIS_LOGGING_ENABLED
-#define __CPP_REDIS_LOG(level, msg) cpp_redis::level(msg, __FILE__, __LINE__);
+#ifdef __cpp_redis_LOGGING_ENABLED
+#define __cpp_redis_LOG(level, msg) cpp_redis::level(msg, __FILE__, __LINE__);
 #else
-#define __CPP_REDIS_LOG(level, msg)
-#endif /* __CPP_REDIS_LOGGING_ENABLED */
+#define __cpp_redis_LOG(level, msg)
+#endif /* __cpp_redis_LOGGING_ENABLED */
 
 } //! cpp_redis
