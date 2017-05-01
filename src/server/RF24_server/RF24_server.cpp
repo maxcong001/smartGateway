@@ -113,11 +113,13 @@ protected:
         push_frame_queue(payload_p->nodeID, payload_p->type, (char *)(&(payload_p->msg)));
 
         string ret_msg("push message to frame queue successfully");
-        session->send(ret_msg.c_str(), ret_msg.size());
+        if (!(session->send(ret_msg.c_str(), ret_msg.size())))
+        {
+            LOG4CPLUS_WARN(logger, "RF24 server send out message fail!");
+        }
 
 		delete [] buff;
 		session->close();
-
 	}
 
 	virtual void onSessionDisconnected(translib::TcpSession *session)

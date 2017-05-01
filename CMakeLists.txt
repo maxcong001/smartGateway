@@ -38,7 +38,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CCXX_FLAGS}")
 MESSAGE(STATUS "start build")
 MESSAGE(STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
 
-
+ADD_SUBDIRECTORY(third_party/github/cpp_redis/src)
 ADD_SUBDIRECTORY(src/config)
 ADD_SUBDIRECTORY(third_party/github/translib/src)
 ADD_SUBDIRECTORY(src)
