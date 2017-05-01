@@ -4,14 +4,14 @@
 
 
 //void form_rf_payload(char *buf, char protocol, char *message)
-void form_rf_payload(char *buf, rf24_protocol protocol, protocol_detail protocol_detail)
+void form_rf_payload(char *buf, rf24_protocol protocol, protocol_detail* _proto_detail)
 {
     if (!buf)
     {
         return;
     }
     memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol)), &protocol, sizeof(protocol));
-    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol_detail)), &protocol_detail, sizeof(protocol_detail));
+    memcpy(&(((reinterpret_cast<rf24_msg *>(buf))->_protocol_detail)), _proto_detail, sizeof(protocol_detail));
 }
 void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type)
 //void form_socket_message_from_rf_payload(char *buf, char *payload, char nodeID, char type)
@@ -22,8 +22,8 @@ void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t n
 
     memcpy(&(tmp_socket_message->msg), rf_payload, sizeof(rf24_msg));
 }
-void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol protocol, protocol_detail protocol_detail)
-//void form_socket_message(char *buf, char nodeID, char type, char protocol, char *message)
+void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol protocol, protocol_detail* protocol_detail)
+//void form_socket_message(char *buf, char nodeID, char type, char protocol, char *message)  
 {
     char tmp_buf[32];
     form_rf_payload(tmp_buf, protocol, protocol_detail);

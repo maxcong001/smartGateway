@@ -17,8 +17,6 @@ extern "C" {
 //#include <sys/socket.h>
 }
 
-#include "rf_util.hpp"
-
 #include <log4cplus/logger.h>
 //#include <log4cplus/consoleappender.h>
 #include <log4cplus/fileappender.h>
@@ -30,10 +28,8 @@ extern "C" {
 //#include <log4cplus/helpers/sleep.h>
 #include <log4cplus/loggingmacros.h>
 
-
-
 #include <functional>
-
+#include "rf_util.hpp"
 #include "loop.h"
 #include "tcpServer.h"
 
@@ -51,13 +47,7 @@ void pingNode(uint8_t listNo);
 void *start_monitor(void *);
 
 uint8_t nodeCounter;
-
 uint16_t failID = 0;
-
-int node_sockt_fd[256];
-
-#define RF24_SERVER_PORT 25341
-#define RF24_SERVER_IP "127.0.0.1"
 
 
 //void push_frame_queue(uint8_t nodeID, uint16_t type, char *message, uint16_t len)

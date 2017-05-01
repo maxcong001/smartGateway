@@ -8,13 +8,134 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/shm.h>
+#include <iostream>
 #include "rf_util.hpp"
 
-#define MYPORT 25341
-#define BUFFER_SIZE 1024
+#include "loop.h"
+#include "tcpClient.h"
+#include "timer.h"
+
+#include <ncurses.h>
+#include "RF24Mesh.h"
+#include <RF24.h>
+#include <RF24Network.h>
+
+#include <log4cplus/logger.h>
+//#include <log4cplus/consoleappender.h>
+#include <log4cplus/fileappender.h>
+#include <log4cplus/layout.h>
+//#include <log4cplus/ndc.h>
+//#include <log4cplus/mdc.h>
+#include <log4cplus/helpers/loglog.h>
+#include <log4cplus/thread/threads.h>
+//#include <log4cplus/helpers/sleep.h>
+#include <log4cplus/loggingmacros.h>
+
+
+using namespace std;
+using namespace log4cplus;
+using namespace log4cplus::helpers;
+Logger logger = Logger::getInstance(LOG4CPLUS_TEXT("RF24_client_test: "));
+
+
+class RF24TcpClient : public translib::TcpClient
+{
+public:
+	RF24TcpClient(const translib::Loop &loop):
+		translib::TcpClient(loop)
+	{}
+
+protected:
+	virtual void onRead()
+	{
+	}
+
+	virtual void onDisconnected()
+	{
+		cout << "RF24TcpClient::" << __FUNCTION__ << endl;
+	}
+
+	virtual void onConnected(int error)
+	{
+		cout << "RF24TcpClient::" << __FUNCTION__ << endl;
+#if 0
+void form_rf_payload(char *buf, rf24_protocol _protocol, protocol_detail _protocol_detail);
+void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type);
+void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol _protocol, protocol_detail _protocol_detail);
+#endif  
+
+        for (uint16_t nodeID = 0; nodeID < 10; nodeID++)
+        {
+            char buf[32] = {0};
+            pin_detail pin_det= {1,1};
+            protocol_detail proto_detail;
+            memcpy(&(proto_detail._pin), &pin_det, sizeof(pin_detail));
+            protocol_detail* tmp_proto_p = &proto_detail;
+            form_socket_message(buf, nodeID, 65, rf24_protocol_pin, tmp_proto_p); 
+		    send(buf, sizeof(socket_message));
+            cout << "send to Node "<<nodeID << endl;
+        }
+
+	}
+};
+
+class RF24TcpClientManager : public translib::Loop
+{
+public:
+	RF24TcpClientManager():
+		_client(*this),
+		_timer(*this)
+	{
+		_timer.startForever(1000, std::bind(&RF24TcpClientManager::tick, this));
+	}
+
+protected:
+	void tick()
+	{
+		cout << "round " << _timer.curRound() << endl;
+		if (!_client.isConnected())
+		{
+			_client.connect(RF24_SERVER_IP, RF24_SERVER_PORT);
+		}
+
+		if (_timer.curRound() >= 30)
+		{
+			stop();
+		}
+	}
+private:
+	RF24TcpClient _client;
+	translib::Timer _timer;
+};
+
 
 int main()
 {
+    // init log
+    log4cplus::initialize();
+    try
+    {
+        SharedObjectPtr<Appender> append_1(new FileAppender("RF24_client_test.log"));
+        append_1->setName(LOG4CPLUS_TEXT("First"));
+
+        log4cplus::tstring pattern = LOG4CPLUS_TEXT("[%d{%m/%d/%y %H:%M:%S,%Q}] %c %-5p - %m [%l]%n");
+        //  std::tstring pattern = LOG4CPLUS_TEXT("%d{%c} [%t] %-5p [%.15c{3}] %%%x%% - %m [%l]%n");
+        append_1->setLayout(std::auto_ptr<Layout>(new PatternLayout(pattern)));
+        Logger::getRoot().addAppender(append_1);
+
+        logger.setLogLevel(DEBUG_LOG_LEVEL);
+    }
+    catch (...)
+    {
+        Logger::getRoot().log(FATAL_LOG_LEVEL, LOG4CPLUS_TEXT("Exception occured..."));
+    }
+
+    LOG4CPLUS_DEBUG(logger, "set logger done!");
+
+	RF24TcpClientManager clientManager;
+	clientManager.start(false);
+	clientManager.wait();
+
     return 0;
 }
 #if 0

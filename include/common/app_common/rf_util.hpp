@@ -1,5 +1,10 @@
 #include "time.h"
 #include <stdint.h>
+
+#define RF24_SERVER_PORT 25341
+#define RF24_SERVER_IP "127.0.0.1"
+#define BUFFER_SIZE 1024
+
 //time_t time(time_t * timer)
 #define MAGIC_NUM 'M'
 struct i2c_detail
@@ -102,6 +107,6 @@ struct socket_message
     rf24_msg msg;
 };
 
-void form_rf_payload(char *buf, rf24_protocol _protocol, protocol_detail _protocol_detail);
+void form_rf_payload(char *buf, rf24_protocol _protocol, protocol_detail* _protocol_detail);
 void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t nodeID, char type);
-void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol _protocol, protocol_detail _protocol_detail);
+void form_socket_message(char *buf, uint16_t nodeID, char type, rf24_protocol _protocol, protocol_detail* _protocol_detail);
