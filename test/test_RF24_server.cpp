@@ -15,6 +15,9 @@
 
 int main()
 {
+    return 0;
+}
+#if 0
     ///....sockfd
     int sock_cli = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -86,3 +89,4 @@ int main()
     close(sock_cli);
     return 0;
 }
+#endif
