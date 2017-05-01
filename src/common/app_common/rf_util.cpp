@@ -19,6 +19,7 @@ void form_socket_message_from_rf_payload(char *buf, char *rf_payload, uint16_t n
     socket_message* tmp_socket_message = reinterpret_cast<socket_message *>(buf);
     tmp_socket_message->nodeID = nodeID;
     tmp_socket_message->type = type;
+    tmp_socket_message->magic_num = MAGIC_NUM;
 
     memcpy(&(tmp_socket_message->msg), rf_payload, sizeof(rf24_msg));
 }

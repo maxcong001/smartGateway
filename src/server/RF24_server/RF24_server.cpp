@@ -98,6 +98,8 @@ protected:
             LOG4CPLUS_WARN(logger, "magic num miss match! Got invalid message!");
             string ret_msg("magic num miss match! You sent invalid message!");
             session->send(ret_msg.c_str(), ret_msg.size());
+            delete [] buff;
+		    session->close();
             return;
         }
         push_frame_queue(payload_p->nodeID, payload_p->type, (char *)(&(payload_p->msg)));
