@@ -222,7 +222,12 @@ void handle_R_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
     LOG4CPLUS_TRACE(logger, "entered. header_p->from_node is " << header_p->from_node);
     handle_message(payload_p, header_p);
 }
-
+void handle_A_message(rf24_msg *payload_p, RF24NetworkHeader *header_p)
+{
+    static string _func = "handle_R_message() ";
+    LOG4CPLUS_TRACE(logger, "entered. header_p->from_node is " << header_p->from_node);
+    handle_message(payload_p, header_p);
+}
 void handle_incoming_message(char *buf, RF24NetworkHeader *header_p)
 {
     static string _func = "handle_incoming_message() ";
@@ -231,6 +236,10 @@ void handle_incoming_message(char *buf, RF24NetworkHeader *header_p)
     rf24_msg *payload_p = (rf24_msg *)buf;
     switch (header_p->type)
     {
+    case 'A':
+        LOG4CPLUS_TRACE(logger, "receive a 'A' message!");
+        handle_A_message(payload_p, header_p);
+        break;
     case 'G':
         LOG4CPLUS_TRACE(logger, "receive a 'G' message!");
         handle_G_message(payload_p, header_p);
