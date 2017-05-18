@@ -74,7 +74,7 @@
 #ifdef __cplusplus
 
 #if (defined(__linux) || defined(linux)) && !defined(__ARDUINO_X86__)
-#include <RF24/RF24_config.h>
+#include <RF24_config.h>
 
 //ATXMega
 #elif defined(XMEGA)
